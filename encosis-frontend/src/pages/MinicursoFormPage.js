@@ -1,0 +1,88 @@
+// src/pages/MinicursoFormPage.js
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, Paper, TextField, Button, Box } from '@mui/material';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+
+const MINICURSOS_STORAGE_KEY = 'minicursos';
+
+function MinicursoFormPage() {
+  const navigate = useNavigate();
+  const { id: itemId } = useParams();
+  const location = useLocation();
+  const isViewMode = new URLSearchParams(location.search).get('view') === 'true';
+  const isEditMode = Boolean(itemId) && !isViewMode;
+
+  const pageTitle = isViewMode ? 'Visualizar Minicurso' : (isEditMode ? 'Editar Minicurso' : 'Novo Minicurso');
+  const submitButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Minicurso';
+
+  const [formData, setFormData] = useState({
+    nome: '', professor: '', cargaHoraria: '', vagas: ''
+  });
+  const [dataCriacao, setDataCriacao] = useState('');
+
+  useEffect(() => {
+    if (itemId) {
+      const items = getLocalStorage(MINICURSOS_STORAGE_KEY);
+      const itemToLoad = items.find(i => String(i.id) === String(itemId));
+      if (itemToLoad) {
+        setFormData({
+            nome: itemToLoad.nome,
+            professor: itemToLoad.professor,
+            cargaHoraria: itemToLoad.cargaHoraria,
+            vagas: itemToLoad.vagas,
+        });
+        setDataCriacao(itemToLoad.dataCriacao || '');
+      } else {
+        alert('Minicurso não encontrado!'); navigate('/minicursos');
+      }
+    }
+  }, [itemId, navigate]);
+
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isViewMode) return;
+
+    const items = getLocalStorage(MINICURSOS_STORAGE_KEY);
+    let updatedItems;
+
+    if (isEditMode) {
+      updatedItems = items.map(item =>
+        String(item.id) === String(itemId) ? { ...item, ...formData, dataCriacao } : item
+      );
+      alert('Minicurso atualizado!');
+    } else {
+      const newItem = { id: Date.now(), ...formData, dataCriacao: new Date().toLocaleDateString('pt-BR') };
+      updatedItems = [...items, newItem];
+      alert('Minicurso criado!');
+    }
+    setLocalStorage(MINICURSOS_STORAGE_KEY, updatedItems);
+    navigate('/minicursos');
+  };
+
+  return (
+    <Container maxWidth="sm" sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+      <Paper elevation={3} sx={{ padding: 4, width: '100%', maxWidth: '500px' }}>
+        <Typography variant="h5" component="h1" gutterBottom sx={{ fontWeight: 'bold', mb: 1 }}>{pageTitle}</Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom sx={{ mb: 3 }}>
+            {isViewMode ? 'Detalhes do minicurso.' : (isEditMode ? 'Atualize os dados do minicurso.' : 'Preencha os dados para um novo minicurso.')}
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField label="Nome do Minicurso" name="nome" fullWidth margin="normal" value={formData.nome} onChange={handleChange} required={!isViewMode} disabled={isViewMode} InputLabelProps={{ shrink: true }} />
+          <TextField label="Professor" name="professor" fullWidth margin="normal" value={formData.professor} onChange={handleChange} required={!isViewMode} disabled={isViewMode} InputLabelProps={{ shrink: true }} />
+          <TextField label="Carga Horária" name="cargaHoraria" fullWidth margin="normal" value={formData.cargaHoraria} onChange={handleChange} required={!isViewMode} disabled={isViewMode} InputLabelProps={{ shrink: true }} />
+          <TextField label="Vagas" name="vagas" fullWidth margin="normal" value={formData.vagas} onChange={handleChange} required={!isViewMode} disabled={isViewMode} InputLabelProps={{ shrink: true }} />
+          {itemId && <TextField label="Data de Criação" name="dataCriacao" fullWidth margin="normal" value={dataCriacao} disabled InputLabelProps={{ shrink: true }} />}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button variant="outlined" onClick={() => navigate('/minicursos')} sx={{ mr: 2, textTransform: 'none' }}>{isViewMode ? 'Voltar' : 'Cancelar'}</Button>
+            {!isViewMode && <Button type="submit" variant="contained" sx={{backgroundColor: '#0D1B2A', '&:hover': {backgroundColor: '#1E3A5F'}, textTransform: 'none'}}>{submitButtonText}</Button>}
+          </Box>
+        </form>
+      </Paper>
+    </Container>
+  );
+}
+
+export default MinicursoFormPage;
