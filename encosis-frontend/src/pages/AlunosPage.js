@@ -1,27 +1,48 @@
 // src/pages/AlunosPage.js
 import React, { useState, useEffect } from 'react';
+//import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+//import { Link, useNavigate } from 'react-router-dom';
+//import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
+import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
 import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
-import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+import axios from 'axios'; // Importe axios
 
-const ALUNOS_STORAGE_KEY = 'alunos';
-const initialAlunosData = [ // Default data if localStorage is empty
-    { id: 1674150000001, nome: 'Gabriela da Silva', email: 'gabriela.silva@email.com', telefone: '(11) 99999-0006', dataCadastro: '19/01/2024' },
-    { id: 1674063600002, nome: 'Bruna Otas', email: 'bruna.otas@email.com', telefone: '(11) 99999-0005', dataCadastro: '18/01/2024' },
-    { id: 1673977200003, nome: 'Kethellen Hiroiaque', email: 'kethellen.h@email.com', telefone: '(11) 99999-0004', dataCadastro: '17/01/2024' },
-];
+//const ALUNOS_STORAGE_KEY = 'alunos';
+//const initialAlunosData = [ // Default data if localStorage is empty
+    //{ id: 1674150000001, nome: 'Gabriela da Silva', email: 'gabriela.silva@email.com', telefone: '(11) 99999-0006', dataCadastro: '19/01/2024' },
+    //{ id: 1674063600002, nome: 'Bruna Otas', email: 'bruna.otas@email.com', telefone: '(11) 99999-0005', dataCadastro: '18/01/2024' },
+    //{ id: 1673977200003, nome: 'Kethellen Hiroiaque', email: 'kethellen.h@email.com', telefone: '(11) 99999-0004', dataCadastro: '17/01/2024' },
+//];
+
+const API_URL = 'http://localhost:3000';
 
 function AlunosPage() {
-  const [alunos, setAlunos] = useState(() => getLocalStorage(ALUNOS_STORAGE_KEY, initialAlunosData));
+  const [alunos, setAlunos] = useState([]); // Inicie com array vazio
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [alunoToDelete, setAlunoToDelete] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setLocalStorage(ALUNOS_STORAGE_KEY, alunos);
-  }, [alunos]);
+useEffect(() => {
+    const fetchAlunos = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/alunos`);
+        // Assumindo que sua API retorna um array de alunos como:
+        // [{ id: 1, nome: 'João', email: 'joao@example.com', telefone: '123', instituicao: 'ABC', data_cadastro: '...' }]
+        // Se o backend retornar campos com snake_case (ex: data_cadastro) e o frontend
+        // espera camelCase (ex: dataCadastro), você pode precisar mapear/transformar os dados.
+        // Exemplo simples, se o backend já retorna o campo 'dataCadastro' ou um compatível:
+        setAlunos(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar alunos:', error);
+        // Considere adicionar um estado para feedback de erro na UI
+      }
+    };
+
+    fetchAlunos();
+  }, []);
 
   const filteredAlunos = alunos.filter(aluno =>
     (aluno.nome?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -36,25 +57,39 @@ function AlunosPage() {
     navigate(`/alunos/editar/${id}`);
   };
 
-  const openDeleteDialog = (aluno) => {
-    setAlunoToDelete(aluno);
-    setDeleteDialogOpen(true);
-  };
+ const openDeleteDialog = (aluno) => {
+  setAlunoToDelete(aluno);
+  setDeleteDialogOpen(true);
+};
 
-  const closeDeleteDialog = () => {
-    setAlunoToDelete(null);
-    setDeleteDialogOpen(false);
-  };
+ const closeDeleteDialog = () => {
+  setAlunoToDelete(null);
+  setDeleteDialogOpen(false);
+};
 
-  const handleDeleteConfirm = () => {
-    if (alunoToDelete) {
+  const handleDeleteConfirm = async () => { // Transforme a função em async
+  if (alunoToDelete) {
+    try {
+      // Chame a API do backend para excluir o aluno
+      // Você precisará ter uma rota DELETE no seu backend, por exemplo: DELETE /alunos/:id
+      await axios.delete(`${API_URL}/alunos/${alunoToDelete.id}`); // Ajuste a URL conforme sua API
+
+      // Após a exclusão bem-sucedida no backend, atualize o estado local
       setAlunos(prevAlunos => prevAlunos.filter(aluno => aluno.id !== alunoToDelete.id));
+      alert('Aluno excluído com sucesso!'); // Feedback para o usuário
+    } catch (error) {
+      console.error('Erro ao excluir aluno:', error);
+      alert('Erro ao excluir aluno. Verifique o console para mais detalhes.'); // Feedback de erro
+      // Adicione aqui uma lógica mais robusta de tratamento de erro, se necessário
+    } finally {
+      // Feche o diálogo independentemente do resultado
       closeDeleteDialog();
     }
-  };
-
-  return (
+  }
+};
+ return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Seu JSX existente aqui, por exemplo: */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -100,6 +135,7 @@ function AlunosPage() {
                 <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Telefone</TableCell>
+                {/* Se sua API retorna 'data_cadastro', use esse nome aqui */}
                 <TableCell sx={{ fontWeight: 'bold' }}>Data de Cadastro</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }} align="center">Ações</TableCell>
               </TableRow>
@@ -110,7 +146,8 @@ function AlunosPage() {
                   <TableCell component="th" scope="row">{aluno.nome}</TableCell>
                   <TableCell>{aluno.email}</TableCell>
                   <TableCell>{aluno.telefone}</TableCell>
-                  <TableCell>{aluno.dataCadastro}</TableCell>
+                  {/* Ajuste aqui também, se o nome do campo for diferente */}
+                  <TableCell>{aluno.data_cadastro || aluno.dataCadastro}</TableCell>
                   <TableCell align="center">
                     <IconButton title="Visualizar" size="small" onClick={() => handleView(aluno.id)} sx={{color: 'primary.main'}}><Visibility /></IconButton>
                     <IconButton title="Editar" size="small" onClick={() => handleEdit(aluno.id)} sx={{color: 'secondary.main', ml: 0.5}}><Edit /></IconButton>
@@ -119,7 +156,7 @@ function AlunosPage() {
                 </TableRow>
               )) : (
                 <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>Nenhum aluno encontrado.</TableCell>
+                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>Nenhum aluno encontrado ou carregando...</TableCell>
                 </TableRow>
               )}
             </TableBody>

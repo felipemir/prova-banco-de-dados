@@ -1,19 +1,21 @@
-// src/pages/AlunoFormPage.js
+
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Paper, TextField, Button, Box } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+//import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+import axios from 'axios';
 
-const ALUNOS_STORAGE_KEY = 'alunos';
+//const ALUNOS_STORAGE_KEY = 'alunos';
+const API_URL = 'http://localhost:3000';
 
 function AlunoFormPage() {
   const navigate = useNavigate();
-  const { id: alunoId } = useParams();
+  const { id: alunoId } = useParams(); // Renomeie para alunoId para clareza se estiver usando para edição
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const isViewMode = queryParams.get('view') === 'true'; // For disabling form in view mode
+  const isViewMode = queryParams.get('view') === 'true';
 
-  const isEditMode = Boolean(alunoId) && !isViewMode;
+  const isEditMode = Boolean(alunoId) && !isViewMode; // Se tiver alunoId e não for view mode, é edit mode
   const pageTitle = isViewMode ? 'Visualizar Aluno' : (isEditMode ? 'Editar Aluno' : 'Novo Aluno');
   const submitButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Aluno';
 
@@ -21,57 +23,72 @@ function AlunoFormPage() {
     nome: '',
     email: '',
     telefone: '',
+    instituicao: '', // Adicionado o campo instituição
   });
-  const [dataCadastro, setDataCadastro] = useState('');
+  //const [dataCadastro, setDataCadastro] = useState('');
 
 
-  useEffect(() => {
-    if (alunoId) { // For both Edit and View mode
-      const alunos = getLocalStorage(ALUNOS_STORAGE_KEY);
-      const alunoToLoad = alunos.find(a => String(a.id) === String(alunoId));
-      if (alunoToLoad) {
-        setFormData({
-          nome: alunoToLoad.nome,
-          email: alunoToLoad.email,
-          telefone: alunoToLoad.telefone || '', // Handle if telefone is undefined
-        });
-        setDataCadastro(alunoToLoad.dataCadastro || '');
-      } else {
-        alert('Aluno não encontrado!');
-        navigate('/alunos');
-      }
+   useEffect(() => {
+    // Lógica para buscar dados do aluno se estiver no modo de edição ou visualização
+    if (alunoId && (isEditMode || isViewMode)) {
+      const fetchAluno = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/alunos/${alunoId}`);
+          setFormData({
+            nome: response.data.nome,
+            email: response.data.email,
+            telefone: response.data.telefone || '',
+            instituicao: response.data.instituicao || '', // Adicionado instituição
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados do aluno:', error);
+          alert('Aluno não encontrado!');
+          navigate('/alunos');
+        }
+      };
+      fetchAluno();
     }
-  }, [alunoId, navigate]);
+    // Se for modo de criação (sem alunoId), o formulário começa vazio como definido no useState.
+  }, [alunoId, isEditMode, isViewMode, navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+ const handleSubmit = async (event) => { // Transforma a função em async
     event.preventDefault();
-    if (isViewMode) return; // Do nothing on submit if in view mode
+    if (isViewMode) return; // Não faz nada se estiver em modo de visualização
 
-    const alunos = getLocalStorage(ALUNOS_STORAGE_KEY);
-    let updatedAlunos;
+    // Dados a serem enviados para o backend
+    const alunoData = {
+      nome: formData.nome,
+      email: formData.email,
+      telefone: formData.telefone,
+      instituicao: formData.instituicao, // Inclua o campo instituição
+    };
 
-    if (isEditMode) {
-      updatedAlunos = alunos.map(aluno =>
-        String(aluno.id) === String(alunoId) ? { ...aluno, ...formData, dataCadastro } : aluno // Keep original dataCadastro
-      );
-      alert('Aluno atualizado com sucesso!');
-    } else { // Create mode
-      const novoAluno = {
-        id: Date.now(),
-        ...formData,
-        dataCadastro: new Date().toLocaleDateString('pt-BR'),
-      };
-      updatedAlunos = [...alunos, novoAluno];
-      alert('Aluno cadastrado com sucesso!');
+    try {
+      if (isEditMode) {
+        // LÓGICA DE EDIÇÃO (UPDATE) - Você precisará de uma rota PUT/PATCH no backend
+        // await axios.put(`${API_URL}/alunos/${alunoId}`, alunoData);
+        // alert('Aluno atualizado com sucesso!');
+        // Por enquanto, vamos focar na criação. A edição exigirá uma rota de backend correspondente.
+        console.warn('Funcionalidade de edição ainda não implementada completamente com backend.');
+        alert('Edição via API ainda não implementada.');
+      } else {
+        // MODO DE CRIAÇÃO (POST)
+        // A rota no seu backend é '/alunos/cadastro'
+        const response = await axios.post(`${API_URL}/alunos/cadastro`, alunoData);
+        console.log('Aluno cadastrado:', response.data); // response.data deve conter o aluno criado com o ID
+        alert('Aluno cadastrado com sucesso!');
+      }
+      navigate('/alunos'); // Redireciona para a lista de alunos após sucesso
+    } catch (error) {
+      console.error('Erro ao salvar aluno:', error.response ? error.response.data : error.message);
+      alert(`Erro ao salvar aluno: ${error.response?.data?.error || error.message}`);
+      // Adicione um tratamento de erro mais sofisticado se necessário
     }
-
-    setLocalStorage(ALUNOS_STORAGE_KEY, updatedAlunos);
-    navigate('/alunos');
   };
 
   return (
@@ -120,18 +137,22 @@ function AlunoFormPage() {
             disabled={isViewMode}
             InputLabelProps={{ shrink: true }}
           />
-          {alunoId && ( // Show Data de Cadastro only in edit or view mode
-             <TextField
-                label="Data de Cadastro"
-                name="dataCadastro"
-                variant="outlined"
-                fullWidth
-                margin="normal"
-                value={dataCadastro}
-                disabled // Always disabled
-                InputLabelProps={{ shrink: true }}
-            />
-          )}
+          {/* Campo Instituição */}
+          <TextField
+            label="Instituição"
+            name="instituicao"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={formData.instituicao}
+            onChange={handleChange}
+            required={!isViewMode} // Defina como obrigatório se necessário
+            disabled={isViewMode}
+            InputLabelProps={{ shrink: true }}
+          />
+          {/* Data de Cadastro não é mais preenchida manualmente no formulário de criação,
+              o backend irá gerar ou o banco de dados terá um valor padrão.
+              Pode ser exibida no modo de edição/visualização se retornada pela API. */}
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
