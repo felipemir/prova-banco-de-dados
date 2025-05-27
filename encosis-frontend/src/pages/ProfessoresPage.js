@@ -3,25 +3,32 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
-import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+//import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
+import axios from 'axios'; // Importe axio
 
-const PROFESSORES_STORAGE_KEY = 'professores';
-const initialProfessoresData = [
-    { id: 1672444800001, nome: 'Alexandre Castro', email: 'alexandre.castro@universidade.edu', especialidade: 'Inteligência Artificial', dataCadastro: '31/12/2023' },
-    { id: 1672531200002, nome: 'Adriana Anthony', email: 'adriana.anthony@universidade.edu', especialidade: 'Desenvolvimento Web', dataCadastro: '01/01/2024' },
-    { id: 1672617600003, nome: 'Andre Marsilio', email: 'andre.marsilio@universidade.edu', especialidade: 'Banco de Dados', dataCadastro: '02/01/2024' },
-];
+
+const API_URL = 'http://localhost:3000'; // Sua URL do backend
 
 function ProfessoresPage() {
-  const [professores, setProfessores] = useState(() => getLocalStorage(PROFESSORES_STORAGE_KEY, initialProfessoresData));
+  const [professores, setProfessores] = useState([]); // Inicie com array vazio
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null); // Pode renomear para professorToDelete para clareza
   const navigate = useNavigate();
 
+  // useEffect para buscar professores do backend
   useEffect(() => {
-    setLocalStorage(PROFESSORES_STORAGE_KEY, professores);
-  }, [professores]);
+    const fetchProfessores = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/professores`);
+        setProfessores(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar professores:', error);
+      }
+    };
+
+    fetchProfessores();
+  }, []); 
 
   const filteredProfessores = professores.filter(prof =>
     (prof.nome?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -34,10 +41,21 @@ function ProfessoresPage() {
   const openDeleteDialog = (item) => { setItemToDelete(item); setDeleteDialogOpen(true); };
   const closeDeleteDialog = () => { setItemToDelete(null); setDeleteDialogOpen(false); };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => { // Transforme a função em async
     if (itemToDelete) {
-      setProfessores(prev => prev.filter(p => p.id !== itemToDelete.id));
-      closeDeleteDialog();
+      try {
+        // Adicione a chamada para a API de delete do backend para professores
+        // Você precisará criar essa rota no backend: DELETE /professores/:id
+        await axios.delete(`${API_URL}/professores/${itemToDelete.id}`);
+
+        setProfessores(prev => prev.filter(p => p.id !== itemToDelete.id));
+        alert('Professor excluído com sucesso!');
+      } catch (error) {
+        console.error('Erro ao excluir professor:', error);
+        alert('Erro ao excluir professor. Verifique o console para mais detalhes.');
+      } finally {
+        closeDeleteDialog();
+      }
     }
   };
 
@@ -66,7 +84,12 @@ function ProfessoresPage() {
                 <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Especialidade</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Data de Cadastro</TableCell>
+                {/* A coluna "Data de Cadastro" foi mantida do seu código original.
+                    Se o backend não fornecer essa informação diretamente via GET /professores,
+                    você pode precisar removê-la ou buscar essa informação de outra forma
+                    (ou o banco de dados pode ter uma coluna como `created_at`).
+                    Para este exemplo, vamos assumir que, se existir, virá do backend.
+                */}
                 <TableCell sx={{ fontWeight: 'bold' }} align="center">Ações</TableCell>
               </TableRow>
             </TableHead>
@@ -76,7 +99,12 @@ function ProfessoresPage() {
                   <TableCell>{prof.nome}</TableCell>
                   <TableCell>{prof.email}</TableCell>
                   <TableCell>{prof.especialidade}</TableCell>
-                  <TableCell>{prof.dataCadastro}</TableCell>
+                  {/* Se o backend não retornar 'dataCadastro' ou um campo similar, esta célula ficará vazia ou dará erro.
+                      Ajuste conforme os dados que sua API /professores retorna.
+                      Pode ser que a data de cadastro seja gerenciada internamente pelo banco
+                      e não seja um campo retornado por padrão na listagem geral.
+                  */}
+            
                   <TableCell align="center">
                     <IconButton title="Visualizar" size="small" onClick={() => handleView(prof.id)} sx={{color: 'primary.main'}}><Visibility /></IconButton>
                     <IconButton title="Editar" size="small" onClick={() => handleEdit(prof.id)} sx={{color: 'secondary.main', ml: 0.5}}><Edit /></IconButton>
@@ -84,7 +112,7 @@ function ProfessoresPage() {
                   </TableCell>
                 </TableRow>
               )) : (
-                <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3 }}>Nenhum professor encontrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3 }}>Nenhum professor encontrado ou carregando...</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -99,5 +127,4 @@ function ProfessoresPage() {
     </Container>
   );
 }
-
 export default ProfessoresPage;

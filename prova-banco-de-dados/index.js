@@ -1,7 +1,9 @@
 const express = require('express');
 const pool = require('./db');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // Rota para listar alunos
@@ -56,6 +58,20 @@ app.post('/professores/cadastro', async(req, res) => {
     }
 });
 
+
+app.delete('/professores/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM professores WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Professor não encontrado para exclusão' });
+    }
+    res.status(200).json({ message: 'Professor excluído com sucesso' });
+  } catch (err) {
+    console.error('Erro ao excluir professor:', err);
+    res.status(500).json({ error: 'Erro ao excluir professor' });
+  }
+});
 
 //rota para buscar os professores cadastrados
 
