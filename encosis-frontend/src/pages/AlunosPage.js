@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { Visibility, Edit } from '@mui/icons-material';
 import axios from 'axios'; // Importe axios
 
 //const ALUNOS_STORAGE_KEY = 'alunos';
