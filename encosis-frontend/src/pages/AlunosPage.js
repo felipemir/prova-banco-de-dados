@@ -18,7 +18,7 @@ function AlunosPage() {
   const [alunos, setAlunos] = useState([]); // Inicie com array vazio
   const [searchTerm] = useState('');
   const [ setDeleteDialogOpen] = useState(false);
-  const [alunoToDelete, setAlunoToDelete] = useState(null);
+  const [ssetAlunoToDelete] = useState(null);
   const navigate = useNavigate();
 
 useEffect(() => {
@@ -57,11 +57,6 @@ useEffect(() => {
  const openDeleteDialog = (aluno) => {
   setAlunoToDelete(aluno);
   setDeleteDialogOpen(true);
-};
-
- const closeDeleteDialog = () => {
-  setAlunoToDelete(null);
-  setDeleteDialogOpen(false);
 };
 
  return (
