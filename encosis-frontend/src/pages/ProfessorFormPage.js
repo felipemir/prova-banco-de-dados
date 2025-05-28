@@ -25,7 +25,7 @@ function ProfessorFormPage() {
     biografia: '', // Adicionado campo biografia
     telefone: ''   // Adicionado campo telefone
   });
-  const [dataCadastro, setDataCadastro] = useState(''); // Mantido para exibição, mas não enviado na criação
+  const [dataCadastro] = useState(''); // Mantido para exibição, mas não enviado na criação
 
   useEffect(() => {
     if (itemId && (isEditMode || isViewMode)) { // Apenas se for editar ou visualizar

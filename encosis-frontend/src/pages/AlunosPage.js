@@ -1,8 +1,8 @@
 // src/pages/AlunosPage.js
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
+import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios'; // Importe axios
 
 //const ALUNOS_STORAGE_KEY = 'alunos';
@@ -16,8 +16,8 @@ const API_URL = 'backend-banco-de-dados-production.up.railway.app';
 
 function AlunosPage() {
   const [alunos, setAlunos] = useState([]); // Inicie com array vazio
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [searchTerm] = useState('');
+  const [ setDeleteDialogOpen] = useState(false);
   const [alunoToDelete, setAlunoToDelete] = useState(null);
   const navigate = useNavigate();
 
@@ -64,26 +64,6 @@ useEffect(() => {
   setDeleteDialogOpen(false);
 };
 
-  const handleDeleteConfirm = async () => { // Transforme a função em async
-  if (alunoToDelete) {
-    try {
-      // Chame a API do backend para excluir o aluno
-      // Você precisará ter uma rota DELETE no seu backend, por exemplo: DELETE /alunos/:id
-      await axios.delete(`${API_URL}/alunos/${alunoToDelete.id}`); // Ajuste a URL conforme sua API
-
-      // Após a exclusão bem-sucedida no backend, atualize o estado local
-      setAlunos(prevAlunos => prevAlunos.filter(aluno => aluno.id !== alunoToDelete.id));
-      alert('Aluno excluído com sucesso!'); // Feedback para o usuário
-    } catch (error) {
-      console.error('Erro ao excluir aluno:', error);
-      alert('Erro ao excluir aluno. Verifique o console para mais detalhes.'); // Feedback de erro
-      // Adicione aqui uma lógica mais robusta de tratamento de erro, se necessário
-    } finally {
-      // Feche o diálogo independentemente do resultado
-      closeDeleteDialog();
-    }
-  }
-};
  return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       {/* ... (Box com título e botão Novo Aluno) ... */}
