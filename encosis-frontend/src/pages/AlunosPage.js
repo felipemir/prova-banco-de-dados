@@ -17,8 +17,6 @@ const API_URL = 'backend-banco-de-dados-production.up.railway.app';
 function AlunosPage() {
   const [alunos, setAlunos] = useState([]); // Inicie com array vazio
   const [searchTerm] = useState('');
-  const [ setDeleteDialogOpen] = useState(false);
-  const [ssetAlunoToDelete] = useState(null);
   const navigate = useNavigate();
 
 useEffect(() => {
@@ -53,11 +51,6 @@ useEffect(() => {
   const handleEdit = (id) => {
     navigate(`/alunos/editar/${id}`);
   };
-
- const openDeleteDialog = (aluno) => {
-  setAlunoToDelete(aluno);
-  setDeleteDialogOpen(true);
-};
 
  return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
