@@ -1,16 +1,15 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, Paper, Typography, Button, List, ListItem, ListItemText, Box } from '@mui/material';
+import { Container, Grid, Paper, Typography, Button, List, ListItem, ListItemText, Box, CircularProgress } from '@mui/material';
 import { PersonOutline, SchoolOutlined, EventNoteOutlined, BusinessCenterOutlined, GroupAddOutlined, PostAddOutlined, LibraryAddOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { getLocalStorage } from '../utils/localStorage';
+import axios from 'axios'; // Importe o axios
+// Remova a importação de localStorage se não for mais usada para o dashboard
+// import { getLocalStorage } from '../utils/localStorage';
 
-const ALUNOS_STORAGE_KEY = 'alunos';
-const PROFESSORES_STORAGE_KEY = 'professores';
-//const MINICURSOS_STORAGE_KEY = 'minicursos';
-const OFICINAS_STORAGE_KEY = 'oficinas';
+const API_URL = 'http://localhost:3000'; // URL do seu backend
 
-// Componente SummaryCard Refinado
+// Componente SummaryCard Refinado (permanece o mesmo)
 function SummaryCard({ title, count, icon, color, iconColor, linkTo }) {
   return (
     <Paper elevation={2} sx={{ padding: 2.5, backgroundColor: 'white', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -33,46 +32,82 @@ function SummaryCard({ title, count, icon, color, iconColor, linkTo }) {
 function DashboardPage() {
   const [counts, setCounts] = useState({ alunos: 0, professores: 0, oficinas: 0 });
   const [recentAlunos, setRecentAlunos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const alunos = getLocalStorage(ALUNOS_STORAGE_KEY, []);
-    const professores = getLocalStorage(PROFESSORES_STORAGE_KEY, []);
-    //const minicursos = getLocalStorage(MINICURSOS_STORAGE_KEY, []);
-    const oficinas = getLocalStorage(OFICINAS_STORAGE_KEY, []);
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Faz chamadas paralelas para as diferentes rotas do backend
+        const [alunosRes, professoresRes, oficinasRes] = await Promise.all([
+          axios.get(`${API_URL}/alunos`),
+          axios.get(`${API_URL}/professores`),
+          axios.get(`${API_URL}/oficinas`)
+          // Se você tivesse minicursos e quisesse a contagem, adicionaria aqui:
+          // axios.get(`${API_URL}/minicursos`)
+        ]);
 
-    setCounts({
-      alunos: alunos.length,
-      professores: professores.length,
-      //minicursos: minicursos.length,
-      oficinas: oficinas.length,
-    });
+        const alunosData = alunosRes.data || [];
+        const professoresData = professoresRes.data || [];
+        const oficinasData = oficinasRes.data || [];
+        // const minicursosData = minicursosRes.data || []; // Se minicursos fossem buscados
 
-    const sortedAlunos = [...alunos].sort((a, b) => {
-        const parseDate = (dateStr) => {
-            if (!dateStr) return new Date(0);
-            const parts = dateStr.split('/');
-            // Assuming DD/MM/YYYY
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        };
-        return parseDate(b.dataCadastro) - parseDate(a.dataCadastro);
-    });
-    setRecentAlunos(sortedAlunos.slice(0, 3));
+        setCounts({
+          alunos: alunosData.length,
+          professores: professoresData.length,
+          oficinas: oficinasData.length,
+          // minicursos: minicursosData.length, // Se minicursos fossem buscados
+        });
 
+        // Ordenar alunos por data de cadastro (do mais recente para o mais antigo)
+        // Assumindo que seu backend retorna 'data_cadastro' no formato que pode ser ordenado diretamente
+        // ou um timestamp. Se for uma string de data, a ordenação pode precisar de parsing.
+        // O ideal é que o backend retorne a data em um formato ISO (ex: "2024-05-27T10:00:00.000Z")
+        // ou que a query SQL já ordene por data de cadastro DESC.
+        const sortedAlunos = [...alunosData].sort((a, b) => {
+            // Tenta converter para data, se o formato não for diretamente comparável
+            // Ajuste esta lógica de ordenação conforme o formato da data retornado pela sua API
+            const dateA = new Date(a.data_cadastro || 0).getTime();
+            const dateB = new Date(b.data_cadastro || 0).getTime();
+            return dateB - dateA; // Mais recente primeiro
+        });
+        setRecentAlunos(sortedAlunos.slice(0, 3)); // Pega os 3 mais recentes
+
+      } catch (error) {
+        console.error("Erro ao buscar dados para o dashboard:", error);
+        // Tratar o erro, talvez mostrando uma mensagem na UI
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const summaryData = [
+  // A estrutura de summaryData agora usa os valores do estado `counts`
+   const summaryData = [
     { title: 'Alunos', count: counts.alunos, icon: <PersonOutline />, color: '#e3f2fd', iconColor: '#1976d2', linkTo: '/alunos' },
     { title: 'Professores', count: counts.professores, icon: <SchoolOutlined />, color: '#e8f5e9', iconColor: '#388e3c', linkTo: '/professores' },
-    //{ title: 'Minicursos', count: counts.minicursos, icon: <EventNoteOutlined />, color: '#f3e5f5', iconColor: '#7b1fa2', linkTo: '/minicursos' },
     { title: 'Oficinas', count: counts.oficinas, icon: <BusinessCenterOutlined />, color: '#fff3e0', iconColor: '#ef6c00', linkTo: '/oficinas' },
+    // Removido o item de Minicursos conforme solicitado anteriormente
   ];
+
 
   const quickActions = [
     { label: 'Cadastrar Novo Aluno', path: '/alunos/novo', icon: <GroupAddOutlined sx={{ mr: 1.5, color: '#1976d2' }} /> },
     { label: 'Cadastrar Novo Professor', path: '/professores/novo', icon: <SchoolOutlined sx={{ mr: 1.5, color: '#388e3c' }} /> },
-    //{ label: 'Criar Novo Minicurso', path: '/minicursos/novo', icon: <PostAddOutlined sx={{ mr: 1.5, color: '#7b1fa2' }} /> },
-    { label: 'Criar Nova Oficina', path: '/oficinas/novo', icon: <LibraryAddOutlined sx={{ mr: 1.5, color: '#ef6c00' }} /> },
+    // Removido o item de Minicurso conforme solicitado anteriormente
+    { label: 'Criar Nova Oficina', path: '/oficinas/nova', icon: <LibraryAddOutlined sx={{ mr: 1.5, color: '#ef6c00' }} /> },
   ];
+
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -91,12 +126,12 @@ function DashboardPage() {
         ))}
       </Grid>
 
-      <Grid container spacing={11} sx={{ mt: 10}}> {/* Reduzido o mt aqui para alinhar melhor visualmente */}
+      <Grid container spacing={3} sx={{ mt: 9}}> {/* Ajustado o espaçamento */}
         <Grid item xs={12} md={7}>
           <Paper elevation={2} sx={{ padding: 2.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>👥 Alunos Recentes</Typography>
             <Typography variant="body2" color="textSecondary" gutterBottom>Últimos alunos cadastrados no sistema</Typography>
-            <Box sx={{ flexGrow: 1, minHeight: recentAlunos.length === 0 ? '80px' : 'auto' /* Garante um espaço mínimo */ }}>
+            <Box sx={{ flexGrow: 1, minHeight: recentAlunos.length === 0 ? '80px' : 'auto' }}>
               {recentAlunos.length > 0 ? (
                 <List sx={{padding: 0}}>
                   {recentAlunos.map((student) => (
@@ -104,7 +139,8 @@ function DashboardPage() {
                       <Box>
                         <ListItemText primary={student.nome} secondary={student.email} primaryTypographyProps={{fontWeight: '500'}}/>
                       </Box>
-                      <Typography variant="body2" color="textSecondary">{student.dataCadastro}</Typography>
+                      {/* Ajuste para exibir a data de cadastro corretamente */}
+                      <Typography variant="body2" color="textSecondary">{student.data_cadastro ? new Date(student.data_cadastro).toLocaleDateString('pt-BR') : 'Data não disponível'}</Typography>
                     </ListItem>
                   ))}
                 </List>

@@ -35,7 +35,7 @@ function App() {
           <Route path="/alunos/editar/:id" element={<AlunoFormPage />} />
           
           <Route path="/oficinas" element={<OficinasPage />} />
-          <Route path="/oficinas/novo" element={<OficinaFormPage />} /> {/* Changed from /nova for consistency */}
+          <Route path="/oficinas/nova" element={<OficinaFormPage />} /> {/* Changed from /nova for consistency */}
           <Route path="/oficinas/editar/:id" element={<OficinaFormPage />} />
 
           <Route path="/professores" element={<ProfessoresPage />} />

@@ -95,7 +95,7 @@ function OficinasPage() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>Oficinas</Typography>
-        <Button component={Link} to="/oficinas/nova" variant="contained" startIcon={<Add />} sx={{ backgroundColor: '#0D1B2A', '&:hover': { backgroundColor: '#1E3A5F' }}}>
+        <Button component={Link} to="/oficinas/novo" variant="contained" startIcon={<Add />} sx={{ backgroundColor: '#0D1B2A', '&:hover': { backgroundColor: '#1E3A5F' }}}>
           Nova Oficina
         </Button>
       </Box>
