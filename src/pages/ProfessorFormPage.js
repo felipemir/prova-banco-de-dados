@@ -5,8 +5,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 //const PROFESSORES_STORAGE_KEY = 'professores';
-
-const API_URL = 'backend-banco-de-dados-production.up.railway.app';
+const API_URL = process.env.REACT_APP_API_URL;
 
 function ProfessorFormPage() {
   const navigate = useNavigate();

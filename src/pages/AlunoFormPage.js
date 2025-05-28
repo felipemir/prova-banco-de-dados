@@ -8,7 +8,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 // import { AddCircleOutline, RemoveCircleOutline } from '@mui/icons-material'; // Pode remover se não usar
 
-const API_URL = 'backend-banco-de-dados-production.up.railway.app';
+const API_URL = process.env.REACT_APP_API_URL;
 
 function AlunoFormPage() {
   const navigate = useNavigate();

@@ -13,7 +13,7 @@ import axios from 'axios';
 
 // const OFICINAS_STORAGE_KEY = 'oficinas'; // Não é mais necessário
 
-const API_URL = 'backend-banco-de-dados-production.up.railway.app';
+const API_URL = process.env.REACT_APP_API_URL;
 
 function OficinasPage() {
   const [oficinas, setOficinas] = useState([]);

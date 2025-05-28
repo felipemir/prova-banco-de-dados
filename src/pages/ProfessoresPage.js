@@ -6,7 +6,7 @@ import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
 import axios from 'axios'; // Importe axio
 
 
-const API_URL = 'backend-banco-de-dados-production.up.railway.app'; // Sua URL do backend
+const API_URL = process.env.REACT_APP_API_URL;
 
 function ProfessoresPage() {
   const [professores, setProfessores] = useState([]); // Inicie com array vazio
