@@ -127,42 +127,6 @@ app.get('/professores', async (req, res) => {
   }
 });
 
-// Rota para inscrever aluno em minicurso
-app.post('/alunos/minicursos/inscrever', async (req, res) => {
-  // Os IDs do aluno e do minicurso viriam no corpo da requisição
-  const { aluno_id, minicurso_id } = req.body;
-  // A data de inscrição pode ser gerada automaticamente no momento da inserção
-  // presenca e certificado_emitido podem ser definidos como NULL ou um valor padrão (ex: false) inicialmente
-
-  // Validação básica para garantir que os IDs foram fornecidos
-  if (!aluno_id || !minicurso_id) {
-    return res.status(400).json({ error: 'ID do aluno e ID do minicurso são obrigatórios' });
-  }
-
-  try {
-    const [result] = await pool.query(
-      'INSERT INTO alunos_minicursos (aluno_id, minicurso_id, data_inscricao) VALUES (?, ?, NOW())',
-      [aluno_id, minicurso_id]
-    );
-    // Retorna o ID da inscrição criada e os dados inseridos
-    res.status(201).json({
-      inscricao_id: result.insertId,
-      aluno_id,
-      minicurso_id,
-      data_inscricao: new Date().toISOString(), // Aproximação da data inserida com NOW()
-      presenca: null, // Valor inicial padrão
-      certificado_emitido: null // Valor inicial padrão
-    });
-  } catch (err) {
-    console.error(err); // É bom logar o erro no servidor para debugging
-    // Verifica erros comuns como chave estrangeira não encontrada
-    if (err.code === 'ER_NO_REFERENCED_ROW_2') {
-      return res.status(404).json({ error: 'Aluno ou Minicurso não encontrado com o ID fornecido.' });
-    }
-    res.status(500).json({ error: 'Erro ao inscrever aluno no minicurso' });
-  }
-});
-
 
 // Rota para inscrever aluno em oficina
 app.post('/alunos/oficinas/inscrever', async (req, res) => {
@@ -205,8 +169,18 @@ app.post('/alunos/oficinas/inscrever', async (req, res) => {
 // ROTA PARA LISTAR TODAS AS OFICINAS (NOVO)
 app.get('/oficinas', async (req, res) => {
   try {
-    // Selecione os campos que você precisará no frontend (pelo menos id e título)
-    const [rows] = await pool.query('SELECT id, titulo, vagas_disponiveis FROM oficinas ORDER BY titulo');
+    const [rows] = await pool.query(`
+      SELECT 
+        o.id, 
+        o.titulo, 
+        o.vagas_disponiveis, 
+        o.data_inicio, 
+        o.data_fim,
+        p.nome as professor_nome 
+      FROM oficinas o
+      LEFT JOIN professores p ON o.professor_id = p.id
+      ORDER BY o.titulo
+    `);
     res.json(rows);
   } catch (err) {
     console.error('Erro ao buscar oficinas:', err);
@@ -214,6 +188,24 @@ app.get('/oficinas', async (req, res) => {
   }
 });
 
+// Em prova-banco-de-dados/index.js
+app.delete('/oficinas/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // ANTES DE EXCLUIR A OFICINA, VOCÊ PRECISA EXCLUIR AS REFERÊNCIAS A ELA
+    // na tabela alunos_oficinas, devido à restrição de chave estrangeira.
+    await pool.query('DELETE FROM alunos_oficinas WHERE oficina_id = ?', [id]);
+    
+    const [result] = await pool.query('DELETE FROM oficinas WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Oficina não encontrada para exclusão' });
+    }
+    res.status(200).json({ message: 'Oficina e inscrições associadas excluídas com sucesso' });
+  } catch (err) {
+    console.error('Erro ao excluir oficina:', err);
+    res.status(500).json({ error: 'Erro ao excluir oficina' });
+  }
+});
 
 
 // Rota para inscrever aluno em palestra
@@ -255,59 +247,6 @@ app.post('/alunos/palestras/inscrever', async (req, res) => {
     res.status(500).json({ error: 'Erro ao inscrever aluno na palestra' });
   }
 });
-
-
-// Rota para cadastrar minicurso
-app.post('/minicursos/cadastro', async (req, res) => {
-  const {
-    titulo,
-    descricao,
-    carga_horaria,
-    data_inicio,
-    data_fim,
-    vagas_total,
-    // vagas_disponiveis geralmente é igual a vagas_total no cadastro inicial
-    local,
-    pre_requisitos,
-    professor_id // ID do professor que virá da tabela 'professores'
-  } = req.body;
-
-  // Validação básica
-  if (!titulo || !descricao || !carga_horaria || !data_inicio || !data_fim || !vagas_total || !local || !professor_id) {
-    return res.status(400).json({ error: 'Todos os campos obrigatórios, incluindo professor_id, devem ser fornecidos.' });
-  }
-
-  try {
-    // Assumindo que vagas_disponiveis será igual a vagas_total no momento do cadastro
-    const vagas_disponiveis = vagas_total;
-
-    const [result] = await pool.query(
-      'INSERT INTO minicursos (titulo, descricao, carga_horaria, data_inicio, data_fim, vagas_total, vagas_disponiveis, local, pre_requisitos, professor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [titulo, descricao, carga_horaria, data_inicio, data_fim, vagas_total, vagas_disponiveis, local, pre_requisitos, professor_id]
-    );
-    res.status(201).json({
-      id: result.insertId, // ID do minicurso recém-criado
-      titulo,
-      descricao,
-      carga_horaria,
-      data_inicio,
-      data_fim,
-      vagas_total,
-      vagas_disponiveis,
-      local,
-      pre_requisitos,
-      professor_id // Retornando o ID do professor associado
-    });
-  } catch (err) {
-    console.error(err);
-    // Tratamento de erro para chave estrangeira (se professor_id não existir na tabela professores)
-    if (err.code === 'ER_NO_REFERENCED_ROW_2') {
-      return res.status(404).json({ error: 'Professor com o ID fornecido não encontrado.' });
-    }
-    res.status(500).json({ error: 'Erro ao cadastrar minicurso' });
-  }
-});
-
 
 
 
