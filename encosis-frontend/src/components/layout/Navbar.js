@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 const navItems = [
   { label: 'Dashboard', path: '/dashboard' },
   { label: 'Alunos', path: '/alunos' },
-  { label: 'Minicursos', path: '/minicursos' },
+  //{ label: 'Minicursos', path: '/minicursos' },
   { label: 'Oficinas', path: '/oficinas' },
   { label: 'Professores', path: '/professores' },
 ];

@@ -7,8 +7,8 @@ import DashboardPage from './pages/DashboardPage';
 import AlunosPage from './pages/AlunosPage';
 import AlunoFormPage from './pages/AlunoFormPage';
 
-import MinicursosPage from './pages/MinicursosPage';
-import MinicursoFormPage from './pages/MinicursoFormPage';
+//import MinicursosPage from './pages/MinicursosPage';
+//import MinicursoFormPage from './pages/MinicursoFormPage';
 
 import OficinasPage from './pages/OficinasPage';
 import OficinaFormPage from './pages/OficinaFormPage';
@@ -33,11 +33,7 @@ function App() {
           <Route path="/alunos" element={<AlunosPage />} />
           <Route path="/alunos/novo" element={<AlunoFormPage />} />
           <Route path="/alunos/editar/:id" element={<AlunoFormPage />} />
-
-          <Route path="/minicursos" element={<MinicursosPage />} />
-          <Route path="/minicursos/novo" element={<MinicursoFormPage />} />
-          <Route path="/minicursos/editar/:id" element={<MinicursoFormPage />} />
-
+          
           <Route path="/oficinas" element={<OficinasPage />} />
           <Route path="/oficinas/novo" element={<OficinaFormPage />} /> {/* Changed from /nova for consistency */}
           <Route path="/oficinas/editar/:id" element={<OficinaFormPage />} />

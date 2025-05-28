@@ -7,7 +7,7 @@ import { getLocalStorage } from '../utils/localStorage';
 
 const ALUNOS_STORAGE_KEY = 'alunos';
 const PROFESSORES_STORAGE_KEY = 'professores';
-const MINICURSOS_STORAGE_KEY = 'minicursos';
+//const MINICURSOS_STORAGE_KEY = 'minicursos';
 const OFICINAS_STORAGE_KEY = 'oficinas';
 
 // Componente SummaryCard Refinado
@@ -31,19 +31,19 @@ function SummaryCard({ title, count, icon, color, iconColor, linkTo }) {
 }
 
 function DashboardPage() {
-  const [counts, setCounts] = useState({ alunos: 0, professores: 0, minicursos: 0, oficinas: 0 });
+  const [counts, setCounts] = useState({ alunos: 0, professores: 0, oficinas: 0 });
   const [recentAlunos, setRecentAlunos] = useState([]);
 
   useEffect(() => {
     const alunos = getLocalStorage(ALUNOS_STORAGE_KEY, []);
     const professores = getLocalStorage(PROFESSORES_STORAGE_KEY, []);
-    const minicursos = getLocalStorage(MINICURSOS_STORAGE_KEY, []);
+    //const minicursos = getLocalStorage(MINICURSOS_STORAGE_KEY, []);
     const oficinas = getLocalStorage(OFICINAS_STORAGE_KEY, []);
 
     setCounts({
       alunos: alunos.length,
       professores: professores.length,
-      minicursos: minicursos.length,
+      //minicursos: minicursos.length,
       oficinas: oficinas.length,
     });
 
@@ -63,14 +63,14 @@ function DashboardPage() {
   const summaryData = [
     { title: 'Alunos', count: counts.alunos, icon: <PersonOutline />, color: '#e3f2fd', iconColor: '#1976d2', linkTo: '/alunos' },
     { title: 'Professores', count: counts.professores, icon: <SchoolOutlined />, color: '#e8f5e9', iconColor: '#388e3c', linkTo: '/professores' },
-    { title: 'Minicursos', count: counts.minicursos, icon: <EventNoteOutlined />, color: '#f3e5f5', iconColor: '#7b1fa2', linkTo: '/minicursos' },
+    //{ title: 'Minicursos', count: counts.minicursos, icon: <EventNoteOutlined />, color: '#f3e5f5', iconColor: '#7b1fa2', linkTo: '/minicursos' },
     { title: 'Oficinas', count: counts.oficinas, icon: <BusinessCenterOutlined />, color: '#fff3e0', iconColor: '#ef6c00', linkTo: '/oficinas' },
   ];
 
   const quickActions = [
     { label: 'Cadastrar Novo Aluno', path: '/alunos/novo', icon: <GroupAddOutlined sx={{ mr: 1.5, color: '#1976d2' }} /> },
     { label: 'Cadastrar Novo Professor', path: '/professores/novo', icon: <SchoolOutlined sx={{ mr: 1.5, color: '#388e3c' }} /> },
-    { label: 'Criar Novo Minicurso', path: '/minicursos/novo', icon: <PostAddOutlined sx={{ mr: 1.5, color: '#7b1fa2' }} /> },
+    //{ label: 'Criar Novo Minicurso', path: '/minicursos/novo', icon: <PostAddOutlined sx={{ mr: 1.5, color: '#7b1fa2' }} /> },
     { label: 'Criar Nova Oficina', path: '/oficinas/novo', icon: <LibraryAddOutlined sx={{ mr: 1.5, color: '#ef6c00' }} /> },
   ];
 
