@@ -84,7 +84,6 @@ useEffect(() => {
                   <TableCell align="center">
                     <IconButton title="Visualizar" size="small" onClick={() => handleView(aluno.id)} sx={{color: 'primary.main'}}><Visibility /></IconButton>
                     <IconButton title="Editar" size="small" onClick={() => handleEdit(aluno.id)} sx={{color: 'secondary.main', ml: 0.5}}><Edit /></IconButton>
-                    <IconButton title="Excluir" size="small" onClick={() => openDeleteDialog(aluno)} sx={{color: 'error.main', ml: 0.5}}><Delete /></IconButton>
                   </TableCell>
                 </TableRow>
               )) : (
