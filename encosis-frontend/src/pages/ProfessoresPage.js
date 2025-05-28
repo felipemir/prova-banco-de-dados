@@ -1,9 +1,8 @@
 // src/pages/ProfessoresPage.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
-//import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
 import axios from 'axios'; // Importe axio
 
 

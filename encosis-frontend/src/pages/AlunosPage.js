@@ -1,11 +1,7 @@
 // src/pages/AlunosPage.js
 import React, { useState, useEffect } from 'react';
-//import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-//import { Link, useNavigate } from 'react-router-dom';
-//import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
-import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
-import { Container, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, Box, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { Visibility, Edit, Delete, Search, Add } from '@mui/icons-material';
 import axios from 'axios'; // Importe axios
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Paper, TextField, Button, Box,
-  FormControl, InputLabel, Select, MenuItem, CircularProgress, // MenuItem pode não ser usado aqui se for só checkbox
-  List, ListItem, ListItemText, IconButton, Checkbox, ListItemIcon // Imports para a lista de oficinas
+  CircularProgress, // MenuItem pode não ser usado aqui se for só checkbox
+  List, ListItem, ListItemText, Checkbox// Imports para a lista de oficinas
 } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';

@@ -1,7 +1,7 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect } from 'react';
 import { Container, Grid, Paper, Typography, Button, List, ListItem, ListItemText, Box, CircularProgress } from '@mui/material';
-import { PersonOutline, SchoolOutlined, EventNoteOutlined, BusinessCenterOutlined, GroupAddOutlined, PostAddOutlined, LibraryAddOutlined } from '@mui/icons-material';
+import { PersonOutline, SchoolOutlined,BusinessCenterOutlined, GroupAddOutlined, LibraryAddOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; // Importe o axios
 // Remova a importação de localStorage se não for mais usada para o dashboard

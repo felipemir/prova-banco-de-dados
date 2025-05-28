@@ -1,8 +1,7 @@
 // src/pages/ProfessorFormPage.js
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Container, Typography, Paper, TextField, Button, Box } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-//import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
 import axios from 'axios';
 
 //const PROFESSORES_STORAGE_KEY = 'professores';
