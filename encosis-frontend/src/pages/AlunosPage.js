@@ -16,7 +16,7 @@ import axios from 'axios'; // Importe axios
     //{ id: 1673977200003, nome: 'Kethellen Hiroiaque', email: 'kethellen.h@email.com', telefone: '(11) 99999-0004', dataCadastro: '17/01/2024' },
 //];
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'backend-banco-de-dados-production.up.railway.app';
 
 function AlunosPage() {
   const [alunos, setAlunos] = useState([]); // Inicie com array vazio

@@ -7,7 +7,7 @@ import axios from 'axios'; // Importe o axios
 // Remova a importação de localStorage se não for mais usada para o dashboard
 // import { getLocalStorage } from '../utils/localStorage';
 
-const API_URL = 'http://localhost:3000'; // URL do seu backend
+const API_URL = 'backend-banco-de-dados-production.up.railway.app'; // URL do seu backend
 
 // Componente SummaryCard Refinado (permanece o mesmo)
 function SummaryCard({ title, count, icon, color, iconColor, linkTo }) {

@@ -7,7 +7,7 @@ import axios from 'axios';
 
 //const PROFESSORES_STORAGE_KEY = 'professores';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'backend-banco-de-dados-production.up.railway.app';
 
 function ProfessorFormPage() {
   const navigate = useNavigate();
