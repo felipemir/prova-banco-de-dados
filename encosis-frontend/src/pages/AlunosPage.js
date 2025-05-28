@@ -47,6 +47,7 @@ useEffect(() => {
   const filteredAlunos = alunos.filter(aluno =>
     (aluno.nome?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (aluno.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+     (aluno.instituicao?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const handleView = (id) => {
@@ -89,53 +90,21 @@ useEffect(() => {
 };
  return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Seu JSX existente aqui, por exemplo: */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Alunos
-          </Typography>
-          <Typography variant="subtitle1" color="textSecondary">
-            Gerencie os alunos participantes do ENCOSIS
-          </Typography>
-        </Box>
-        <Button component={Link} to="/alunos/novo" variant="contained" startIcon={<Add />} sx={{ backgroundColor: '#0D1B2A', '&:hover': { backgroundColor: '#1E3A5F' }}}>
-          Novo Aluno
-        </Button>
-      </Box>
+      {/* ... (Box com título e botão Novo Aluno) ... */}
 
       <Paper elevation={2} sx={{ padding: 3 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">
-                Lista de Alunos
-            </Typography>
-            <TextField
-                variant="outlined"
-                size="small"
-                placeholder="Buscar alunos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                    startAdornment: (
-                    <InputAdornment position="start">
-                        <Search />
-                    </InputAdornment>
-                    ),
-                }}
-                sx={{ width: '300px' }}
-            />
-        </Box>
+        {/* ... (Box com título da lista e campo de busca) ... */}
         <Typography variant="body2" color="textSecondary" gutterBottom>
             Total de {filteredAlunos.length} aluno(s) cadastrado(s)
         </Typography>
         <TableContainer sx={{ mt: 2 }}>
-          <Table sx={{ minWidth: 650 }} aria-label="tabela de alunos">
+          <Table sx={{ minWidth: 750 }} aria-label="tabela de alunos"> {/* Ajuste minWidth se necessário */}
             <TableHead sx={{ backgroundColor: '#f8f9fa' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Telefone</TableCell>
-                {/* Se sua API retorna 'data_cadastro', use esse nome aqui */}
+                <TableCell sx={{ fontWeight: 'bold' }}>Instituição</TableCell> {/* NOVA COLUNA */}
                 <TableCell sx={{ fontWeight: 'bold' }}>Data de Cadastro</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }} align="center">Ações</TableCell>
               </TableRow>
@@ -146,8 +115,8 @@ useEffect(() => {
                   <TableCell component="th" scope="row">{aluno.nome}</TableCell>
                   <TableCell>{aluno.email}</TableCell>
                   <TableCell>{aluno.telefone}</TableCell>
-                  {/* Ajuste aqui também, se o nome do campo for diferente */}
-                  <TableCell>{aluno.data_cadastro || aluno.dataCadastro}</TableCell>
+                  <TableCell>{aluno.instituicao || 'N/A'}</TableCell> {/* EXIBIR INSTITUIÇÃO */}
+                  <TableCell>{aluno.data_cadastro || aluno.dataCadastro || 'N/A'}</TableCell>
                   <TableCell align="center">
                     <IconButton title="Visualizar" size="small" onClick={() => handleView(aluno.id)} sx={{color: 'primary.main'}}><Visibility /></IconButton>
                     <IconButton title="Editar" size="small" onClick={() => handleEdit(aluno.id)} sx={{color: 'secondary.main', ml: 0.5}}><Edit /></IconButton>
@@ -156,7 +125,8 @@ useEffect(() => {
                 </TableRow>
               )) : (
                 <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>Nenhum aluno encontrado ou carregando...</TableCell>
+                    {/* Ajuste colSpan para o novo número de colunas */}
+                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>Nenhum aluno encontrado ou carregando...</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -164,20 +134,8 @@ useEffect(() => {
         </TableContainer>
       </Paper>
 
-      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Você tem certeza que deseja excluir o aluno "{alunoToDelete?.nome}"? Esta ação não pode ser desfeita.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog}>Cancelar</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>Excluir</Button>
-        </DialogActions>
-      </Dialog>
+      {/* ... (Dialog de exclusão) ... */}
     </Container>
   );
 }
-
 export default AlunosPage;

@@ -6,13 +6,34 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rota para listar alunos
+
+
 app.get('/alunos', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM alunos');
-    res.json(rows);
+    const [rows] = await pool.query(`
+      SELECT 
+        a.id, 
+        a.nome, 
+        a.email, 
+        a.telefone, 
+        a.instituicao, 
+        a.data_cadastro,  -- Certifique-se que este campo existe ou ajuste a query
+        GROUP_CONCAT(o.titulo SEPARATOR ', ') as oficinas_inscritas
+      FROM alunos a
+      LEFT JOIN alunos_oficinas ao ON a.id = ao.aluno_id
+      LEFT JOIN oficinas o ON ao.oficina_id = o.id
+      GROUP BY a.id, a.nome, a.email, a.telefone, a.instituicao, a.data_cadastro  -- Inclua todos os campos selecionados de 'a'
+      ORDER BY a.nome;
+    `);
+    // Mapeia para garantir que oficinas_inscritas seja null se não houver inscrições, em vez de uma string vazia do GROUP_CONCAT
+    const alunosComOficinas = rows.map(aluno => ({
+      ...aluno,
+      oficinas_inscritas: aluno.oficinas_inscritas || null 
+    }));
+    res.json(alunosComOficinas);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar alunos' });
+    console.error('Erro ao buscar alunos com oficinas:', err);
+    res.status(500).json({ error: 'Erro ao buscar alunos com oficinas' });
   }
 });
 
@@ -42,6 +63,26 @@ app.get('/alunos/:id', async (req, res) => {
   }
 });
 
+
+
+// Rota para excluir aluno por ID
+app.delete('/alunos/:id', async (req, res) => {
+  const { id } = req.params; // Pega o ID da URL
+  try {
+    const [result] = await pool.query('DELETE FROM alunos WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      // Se nenhuma linha foi afetada, o aluno com esse ID não foi encontrado
+      return res.status(404).json({ error: 'Aluno não encontrado para exclusão' });
+    }
+    // Se chegou aqui, o aluno foi excluído com sucesso
+    res.status(200).json({ message: 'Aluno excluído com sucesso' });
+    // Alternativamente, para DELETE, é comum retornar status 204 No Content sem corpo na resposta:
+    // res.status(204).send();
+  } catch (err) {
+    console.error('Erro ao excluir aluno:', err);
+    res.status(500).json({ error: 'Erro ao excluir aluno' });
+  }
+});
 
 //rota para cadastrar professores 
 
@@ -156,6 +197,20 @@ app.post('/alunos/oficinas/inscrever', async (req, res) => {
       return res.status(404).json({ error: 'Aluno ou Oficina não encontrado com o ID fornecido.' });
     }
     res.status(500).json({ error: 'Erro ao inscrever aluno na oficina' });
+  }
+});
+
+
+
+// ROTA PARA LISTAR TODAS AS OFICINAS (NOVO)
+app.get('/oficinas', async (req, res) => {
+  try {
+    // Selecione os campos que você precisará no frontend (pelo menos id e título)
+    const [rows] = await pool.query('SELECT id, titulo, vagas_disponiveis FROM oficinas ORDER BY titulo');
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao buscar oficinas:', err);
+    res.status(500).json({ error: 'Erro ao buscar oficinas' });
   }
 });
 

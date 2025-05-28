@@ -1,99 +1,150 @@
-
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Paper, TextField, Button, Box } from '@mui/material';
+import {
+  Container, Typography, Paper, TextField, Button, Box,
+  FormControl, InputLabel, Select, MenuItem, CircularProgress, // MenuItem pode não ser usado aqui se for só checkbox
+  List, ListItem, ListItemText, IconButton, Checkbox, ListItemIcon // Imports para a lista de oficinas
+} from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-//import { getLocalStorage, setLocalStorage } from '../utils/localStorage';
 import axios from 'axios';
+// import { AddCircleOutline, RemoveCircleOutline } from '@mui/icons-material'; // Pode remover se não usar
 
-//const ALUNOS_STORAGE_KEY = 'alunos';
 const API_URL = 'http://localhost:3000';
 
 function AlunoFormPage() {
   const navigate = useNavigate();
-  const { id: alunoId } = useParams(); // Renomeie para alunoId para clareza se estiver usando para edição
+  const { id: alunoId } = useParams();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const isViewMode = queryParams.get('view') === 'true';
+  const isEditMode = Boolean(alunoId) && !isViewMode;
 
-  const isEditMode = Boolean(alunoId) && !isViewMode; // Se tiver alunoId e não for view mode, é edit mode
   const pageTitle = isViewMode ? 'Visualizar Aluno' : (isEditMode ? 'Editar Aluno' : 'Novo Aluno');
-  const submitButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Aluno';
+  const submitButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Aluno e Inscrever';
 
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
     telefone: '',
-    instituicao: '', // Adicionado o campo instituição
+    instituicao: '',
   });
-  //const [dataCadastro, setDataCadastro] = useState('');
+  // Estados para as oficinas
+  const [oficinasDisponiveis, setOficinasDisponiveis] = useState([]);
+  const [selectedOficinas, setSelectedOficinas] = useState([]);
+  const [loadingOficinas, setLoadingOficinas] = useState(true); // Para o loading das oficinas
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [inscricoesAtuais, setInscricoesAtuais] = useState([]); // Se precisar para edição avançada
 
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoadingOficinas(true); // Inicia o loading
+      try {
+        // Busca as oficinas disponíveis
+        const oficinasRes = await axios.get(`${API_URL}/oficinas`);
+        setOficinasDisponiveis(oficinasRes.data || []);
 
-   useEffect(() => {
-    // Lógica para buscar dados do aluno se estiver no modo de edição ou visualização
-    if (alunoId && (isEditMode || isViewMode)) {
-      const fetchAluno = async () => {
-        try {
-          const response = await axios.get(`${API_URL}/alunos/${alunoId}`);
+        // Se estiver editando ou visualizando um aluno, busca os dados do aluno
+        if (alunoId && (isEditMode || isViewMode)) {
+          const alunoRes = await axios.get(`${API_URL}/alunos/${alunoId}`);
           setFormData({
-            nome: response.data.nome,
-            email: response.data.email,
-            telefone: response.data.telefone || '',
-            instituicao: response.data.instituicao || '', // Adicionado instituição
+            nome: alunoRes.data.nome,
+            email: alunoRes.data.email,
+            telefone: alunoRes.data.telefone || '',
+            instituicao: alunoRes.data.instituicao || '',
           });
-        } catch (error) {
-          console.error('Erro ao buscar dados do aluno:', error);
-          alert('Aluno não encontrado!');
-          navigate('/alunos');
+          // TODO: Implementar a busca de oficinas já inscritas por este aluno
+          // e popular `setSelectedOficinas` com os IDs delas. Ex:
+          // const inscricoesAnteriores = await axios.get(`${API_URL}/alunos/${alunoId}/oficinas`);
+          // if (inscricoesAnteriores.data) {
+          //   setSelectedOficinas(inscricoesAnteriores.data.map(oficina => oficina.oficina_id)); // ou oficina.id dependendo da sua API
+          // }
         }
-      };
-      fetchAluno();
-    }
-    // Se for modo de criação (sem alunoId), o formulário começa vazio como definido no useState.
-  }, [alunoId, isEditMode, isViewMode, navigate]);
+      } catch (error) {
+        console.error('Erro ao buscar dados iniciais:', error);
+        alert('Erro ao carregar dados. Tente novamente.');
+      } finally {
+        setLoadingOficinas(false); // Finaliza o loading
+      }
+    };
+    fetchInitialData();
+  }, [alunoId, isEditMode, isViewMode]); // Dependências do useEffect
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async (event) => { // Transforma a função em async
-    event.preventDefault();
-    if (isViewMode) return; // Não faz nada se estiver em modo de visualização
+  // Função para marcar/desmarcar oficina
+  const handleOficinaToggle = (oficinaId) => {
+    setSelectedOficinas((prevSelected) =>
+      prevSelected.includes(oficinaId)
+        ? prevSelected.filter((id) => id !== oficinaId)
+        : [...prevSelected, oficinaId]
+    );
+  };
 
-    // Dados a serem enviados para o backend
-    const alunoData = {
-      nome: formData.nome,
-      email: formData.email,
-      telefone: formData.telefone,
-      instituicao: formData.instituicao, // Inclua o campo instituição
-    };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isViewMode) return;
+    setIsSubmitting(true);
+
+    const alunoPayload = { ...formData };
+    let currentAlunoId = alunoId;
 
     try {
       if (isEditMode) {
-        // LÓGICA DE EDIÇÃO (UPDATE) - Você precisará de uma rota PUT/PATCH no backend
-        // await axios.put(`${API_URL}/alunos/${alunoId}`, alunoData);
-        // alert('Aluno atualizado com sucesso!');
-        // Por enquanto, vamos focar na criação. A edição exigirá uma rota de backend correspondente.
-        console.warn('Funcionalidade de edição ainda não implementada completamente com backend.');
-        alert('Edição via API ainda não implementada.');
+        // Lógica para atualizar o aluno
+        await axios.put(`${API_URL}/alunos/${alunoId}`, alunoPayload); // PRECISA DESTA ROTA NO BACKEND
+        alert('Dados do aluno atualizados com sucesso!');
       } else {
-        // MODO DE CRIAÇÃO (POST)
-        // A rota no seu backend é '/alunos/cadastro'
-        const response = await axios.post(`${API_URL}/alunos/cadastro`, alunoData);
-        console.log('Aluno cadastrado:', response.data); // response.data deve conter o aluno criado com o ID
+        // Lógica para criar novo aluno
+        const response = await axios.post(`${API_URL}/alunos/cadastro`, alunoPayload);
+        currentAlunoId = response.data.id; // Pega o ID do aluno recém-criado
         alert('Aluno cadastrado com sucesso!');
       }
-      navigate('/alunos'); // Redireciona para a lista de alunos após sucesso
+
+      // Processar inscrições em oficinas apenas se tivermos um ID de aluno
+      if (currentAlunoId) {
+        // No modo de edição, você pode querer comparar selectedOficinas com inscrições anteriores
+        // para decidir se deve inscrever ou desinscrever.
+        // Por simplicidade aqui, vamos apenas tentar inscrever nas selecionadas.
+        // Se uma oficina já estava inscrita e continua selecionada, o backend pode lidar com isso
+        // (ex: ignorar a duplicata ou retornar um erro específico que você pode tratar).
+
+        for (const oficina_id of selectedOficinas) {
+          // TODO: Verificar se o aluno já está inscrito nesta oficina ANTES de tentar inscrever,
+          // especialmente se não houver tratamento de duplicatas no backend.
+          try {
+            await axios.post(`${API_URL}/alunos/oficinas/inscrever`, {
+              aluno_id: currentAlunoId,
+              oficina_id: oficina_id,
+            });
+          } catch (inscError) {
+            console.error(`Erro ao inscrever na oficina ${oficina_id}:`, inscError.response?.data?.error || inscError.message);
+            // Considerar não parar o loop, mas coletar erros para exibir no final.
+          }
+        }
+        if (selectedOficinas.length > 0) {
+            alert('Inscrições em oficinas processadas!');
+        }
+      }
+      navigate('/alunos');
     } catch (error) {
-      console.error('Erro ao salvar aluno:', error.response ? error.response.data : error.message);
-      alert(`Erro ao salvar aluno: ${error.response?.data?.error || error.message}`);
-      // Adicione um tratamento de erro mais sofisticado se necessário
+      console.error('Erro ao processar aluno:', error.response ? error.response.data : error.message);
+      alert(`Erro ao processar aluno: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Só mostra o loading principal se for um novo aluno e estiver carregando oficinas.
+  // Se for edição, o formulário de aluno aparece e a lista de oficinas pode carregar depois.
+  if (loadingOficinas && !alunoId) {
+    return <Container sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}><CircularProgress /></Container>;
+  }
+
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-      <Paper elevation={3} sx={{ padding: 4, width: '100%', maxWidth: '500px' }}>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ padding: 4 }}>
         <Typography variant="h5" component="h1" gutterBottom sx={{ fontWeight: 'bold', mb: 1 }}>
           {pageTitle}
         </Typography>
@@ -101,77 +152,67 @@ function AlunoFormPage() {
           {isViewMode ? 'Detalhes do aluno.' : (isEditMode ? 'Atualize os dados do aluno.' : 'Preencha os dados para cadastrar um novo aluno.')}
         </Typography>
         <form onSubmit={handleSubmit}>
-          <TextField
-            label="Nome completo"
-            name="nome"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formData.nome}
-            onChange={handleChange}
-            required={!isViewMode}
-            disabled={isViewMode}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formData.email}
-            onChange={handleChange}
-            required={!isViewMode}
-            disabled={isViewMode}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Telefone"
-            name="telefone"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formData.telefone}
-            onChange={handleChange}
-            disabled={isViewMode}
-            InputLabelProps={{ shrink: true }}
-          />
-          {/* Campo Instituição */}
-          <TextField
-            label="Instituição"
-            name="instituicao"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formData.instituicao}
-            onChange={handleChange}
-            required={!isViewMode} // Defina como obrigatório se necessário
-            disabled={isViewMode}
-            InputLabelProps={{ shrink: true }}
-          />
-          {/* Data de Cadastro não é mais preenchida manualmente no formulário de criação,
-              o backend irá gerar ou o banco de dados terá um valor padrão.
-              Pode ser exibida no modo de edição/visualização se retornada pela API. */}
+          {/* Campos do Aluno */}
+          <TextField label="Nome completo" name="nome" value={formData.nome} onChange={handleChange} disabled={isViewMode} required fullWidth margin="normal" InputLabelProps={{ shrink: true }}/>
+          <TextField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} disabled={isViewMode} required fullWidth margin="normal" InputLabelProps={{ shrink: true }}/>
+          <TextField label="Telefone" name="telefone" value={formData.telefone} onChange={handleChange} disabled={isViewMode} fullWidth margin="normal" InputLabelProps={{ shrink: true }}/>
+          <TextField label="Instituição" name="instituicao" value={formData.instituicao} onChange={handleChange} disabled={isViewMode} required fullWidth margin="normal" InputLabelProps={{ shrink: true }}/>
+
+          {/* Seção de Inscrição em Oficinas (não mostrar em modo de visualização) */}
+          {!isViewMode && (
+            <Box mt={4} mb={2}>
+              <Typography variant="h6" gutterBottom>Inscrever em Oficinas</Typography>
+              {loadingOficinas ? <CircularProgress size={24} /> : (
+                <Paper variant="outlined" sx={{ maxHeight: 200, overflow: 'auto', borderColor: 'rgba(0, 0, 0, 0.23)', borderRadius: '4px' }}>
+                  <List dense>
+                    {oficinasDisponiveis.length > 0 ? oficinasDisponiveis.map((oficina) => (
+                      <ListItem
+                        key={oficina.id}
+                        button // Faz o item parecer clicável
+                        onClick={() => handleOficinaToggle(oficina.id)}
+                        disabled={isSubmitting}
+                        secondaryAction={ // Para um visual mais claro, pode-se usar secondaryAction para o checkbox
+                            <Checkbox
+                                edge="end"
+                                onChange={() => handleOficinaToggle(oficina.id)}
+                                checked={selectedOficinas.includes(oficina.id)}
+                                disabled={isSubmitting}
+                            />
+                        }
+                      >
+                        {/* Ou manter o ListItemIcon se preferir */}
+                        {/* <ListItemIcon>
+                          <Checkbox
+                            edge="start"
+                            checked={selectedOficinas.includes(oficina.id)}
+                            tabIndex={-1}
+                            disableRipple
+                          />
+                        </ListItemIcon> */}
+                        <ListItemText
+                          primary={oficina.titulo}
+                          secondary={oficina.vagas_disponiveis !== null ? `Vagas disponíveis: ${oficina.vagas_disponiveis}` : 'Vagas não informadas'}
+                        />
+                      </ListItem>
+                    )) : (
+                      <ListItem>
+                        <ListItemText primary="Nenhuma oficina disponível no momento." />
+                      </ListItem>
+                    )}
+                  </List>
+                </Paper>
+              )}
+            </Box>
+          )}
+
+          {/* Botões de Ação */}
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/alunos')}
-              sx={{ mr: 2, textTransform: 'none' }}
-            >
+            <Button variant="outlined" onClick={() => navigate('/alunos')} sx={{ mr: 2, textTransform: 'none' }}>
               {isViewMode ? 'Voltar' : 'Cancelar'}
             </Button>
             {!isViewMode && (
-              <Button
-                type="submit"
-                variant="contained"
-                sx={{
-                  backgroundColor: '#0D1B2A',
-                  '&:hover': { backgroundColor: '#1E3A5F' },
-                  textTransform: 'none'
-                }}
-              >
-                {submitButtonText}
+              <Button type="submit" variant="contained" disabled={isSubmitting} sx={{backgroundColor: '#0D1B2A', '&:hover': {backgroundColor: '#1E3A5F'}, textTransform: 'none'}}>
+                {isSubmitting ? <CircularProgress size={24} color="inherit" /> : submitButtonText}
               </Button>
             )}
           </Box>
